@@ -1,4 +1,4 @@
-export const dbConfig = {
-  connectionString: process.env.HEROKU_POSTGRESQL_YELLOW_URL,
+module.exports = {
+  connectionString: process.env.DATABASE_URL,
   ssl: true,
 };

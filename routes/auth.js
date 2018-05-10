@@ -1,47 +1,110 @@
 const express = require('express');
-const router = express.Router();
+const bcrypt = require('bcryptjs');
+const {
+  Client,
+} = require('pg');
 const passport = require('passport');
+const request = require('request');
+const router = express.Router();
 
-const User = require('../models/user')
+const User = require('../models/user');
+const jwt = require('jsonwebtoken');
 
-router.get('/login', (req, res) => {
-  res.render('admin/login', { user: req.user })
-})
+const dataStore = require('../assets/store');
+
+const {
+  dbConfig,
+} = dataStore;
+
+const d = new Date();
+const db = {
+  updateOrCreate(user, cb) {
+    // db dummy, we just cb the user
+    cb(null, user);
+  },
+};
+
+function serialize(req, res, next) {
+  db.updateOrCreate(req.user, (err, user) => {
+    if (err) {
+      return next(err);
+    }
+    // we store the updated information in req.user again
+    req.user = {
+      id: user.id,
+    };
+    next();
+  });
+}
+
+function generateToken(req, res, next) {
+  const sig = {
+    id: req.user.id,
+  };
+  const secret = 'server secret';
+  const expiration = {
+    expiresIn: '30 days',
+  };
+  req.token = jwt.sign(sig, secret, expiration);
+  next();
+}
+
+function respond(req, res) {
+  res.status(200).json({
+    user: req.user,
+    token: req.token,
+  });
+}
 
 router.post('/login', passport.authenticate('local', {
-  successRedirect: '/admin/',
-  failureRedirect: '/admin/login'
-}))
+  session: false,
+}), serialize, generateToken, respond);
 
-router.get('/register', (req, res) => {
-  console.log('PROCESS ENV FROM REGISTER ROUTE', process.env)
-  res.render('admin/register')
-})
+router.post('/signup', (req, res) => {
+  console.log('hit signup route');
+  const {
+    password,
+    username,
+  } = req.body;
 
-router.post('/register', (req, res, next) => {
-  const developer = process.env.DEVELOPER_ACCT
-  const client = process.env.CLIENT_ACCT
-  if (req.body.username === developer || req.body.username === client) {
-    const user = new User({
-      username: req.body.username,
-      password: req.body.password
-    })
-    user.save((err) => {
-      if (err) {
-        console.error('There was an error saving the user', err)
-      }
-      next()
-    })
-  } else {
-    res.send('YOU ARE NOT AUTHORIZED TO CREATE AN ACCOUNT')
-  }
+  const salt = bcrypt.genSaltSync(10);
+  const passwordHash = password ? bcrypt.hashSync(password, salt) : null;
+  const client = new Client(dbConfig);
+
+  client.connect().then(() => {
+    const sql = `
+      INSERT INTO users
+        (username, password_hash)
+        VALUES ($1, $2)
+        RETURNING *
+      `;
+    const params = [username, passwordHash];
+    return client.query(sql, params);
+  }).then((results) => {
+    const user = results.rows[0];
+    req.user = user;
+    res.json(user);
+  }).catch((error) => {
+    console.error('SIGN UP ERROR', error);
+    res.json({ error });
+  })
+    .then(() => {
+      client.end();
+    });
 }, passport.authenticate('local', {
-  successRedirect: '/admin/'
-}))
+  session: false,
+}));
 
-router.get('/logout', (req, res) => {
-  req.logout()
-  res.redirect('/admin')
-})
+router.post('/logout', (req, res) => {
+  console.log('logging out');
+  req.logout();
+  // res.redirect('/');
+});
+
+router.post('/logout', (req, res) => {
+  console.log('logging out');
+  req.logout();
+  // res.redirect('/');
+});
 
 module.exports = router;
