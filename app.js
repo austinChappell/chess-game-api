@@ -6,6 +6,10 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const session = require('express-session');
 
+const dbConfig = require('./db.config');
+
+// dbConfig.initializeUsers();
+
 const PORT = process.env.PORT || 6000;
 
 app.use((req, res, next) => {
