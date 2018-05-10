@@ -8,9 +8,9 @@ const { dbConfig } = dataStore;
 const User = require('./models/user');
 
 function configure(passport) {
-  const strategyFunc = function (email, password, done) {
+  const strategyFunc = function (username, password, done) {
     console.log('STRATEGY FUNC RUNNING');
-    User.checkUser(email.toLowerCase(), password, (err, user) => {
+    User.checkUser(username.toLowerCase(), password, (err, user) => {
       if (err) {
         console.log('Local Strategy - Error trying to authenticate.');
         done(err);
@@ -24,7 +24,7 @@ function configure(passport) {
     });
   };
   passport.use(new LocalStrategy({
-    usernameField: 'email',
+    usernameField: 'username',
   }, strategyFunc));
   passport.serializeUser((user, done) => {
     console.log('serializeUser', user);
@@ -33,7 +33,7 @@ function configure(passport) {
   passport.deserializeUser((user, done) => {
     console.log('deserializeUser', user);
     const userId = user.id;
-    const client = new Client(dbConfig);
+    const client = new Client();
 
     client.connect().then(() => {
       const sql = 'SELECT * FROM users WHERE id = $1';

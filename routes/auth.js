@@ -25,6 +25,7 @@ const db = {
 };
 
 function serialize(req, res, next) {
+  console.log('SERIALIZE RUNNING')
   db.updateOrCreate(req.user, (err, user) => {
     if (err) {
       return next(err);
@@ -56,12 +57,15 @@ function respond(req, res) {
   });
 }
 
+// router.post('/login', (req, res) => {
+//   console.log('HELLO FROM THE LOGIN ROUTE');
+// },)
+
 router.post('/login', passport.authenticate('local', {
   session: false,
 }), serialize, generateToken, respond);
 
 router.post('/signup', (req, res) => {
-  console.log('hit signup route');
   const {
     password,
     username,
@@ -69,7 +73,7 @@ router.post('/signup', (req, res) => {
 
   const salt = bcrypt.genSaltSync(10);
   const passwordHash = password ? bcrypt.hashSync(password, salt) : null;
-  const client = new Client(dbConfig);
+  const client = new Client();
 
   client.connect().then(() => {
     const sql = `
@@ -94,12 +98,6 @@ router.post('/signup', (req, res) => {
 }, passport.authenticate('local', {
   session: false,
 }));
-
-router.post('/logout', (req, res) => {
-  console.log('logging out');
-  req.logout();
-  // res.redirect('/');
-});
 
 router.post('/logout', (req, res) => {
   console.log('logging out');

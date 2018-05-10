@@ -9,17 +9,17 @@ const checkPassword = function (password, passwordHash) {
   return bcrypt.compareSync(password, passwordHash);
 };
 
-const checkUser = function (email, password, done) {
-  console.log('CHECK USER FUNCTION RUNNING', email, password);
-  const client = new Client(dbConfig);
+const checkUser = function (username, password, done) {
+  console.log('CHECK USER FUNCTION RUNNING', username, password);
+  const client = new Client();
 
   client.connect().then(() => {
-    const sql = 'SELECT * FROM users WHERE email = $1';
-    const params = [email];
+    const sql = 'SELECT * FROM users WHERE username = $1';
+    const params = [username];
 
     return client.query(sql, params);
   }).then((results) => {
-    console.log('email results', results.rows);
+    console.log('username results', results.rows);
     const user = results.rows[0];
 
     if (user && checkPassword(password, user.password_hash)) {
