@@ -31,9 +31,7 @@ function serialize(req, res, next) {
       return next(err);
     }
     // we store the updated information in req.user again
-    req.user = {
-      id: user.id,
-    };
+    req.user = user;
     next();
   });
 }
