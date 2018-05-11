@@ -56,13 +56,14 @@ const io = socket(server);
 io.on('connection', (socket) => {
   console.log('SOCKET IS CONNECTED');
   // here you can start emitting events to the client
-  socket.on('CREATE_GAME', (user) => {
-    console.log('GAME RECEIVED', user);
-    io.emit('RECEIVE_GAME', user);
+  socket.on('CREATE_GAME', (game) => {
+    console.log('GAME RECEIVED', game);
+    game.id = Math.floor(Math.random() * 100000000);
+    io.emit('RECEIVE_GAME', game);
   });
 
   socket.on('JOIN_GAME', (game) => {
-    game.id = Math.floor(Math.random() * 100000000);
+    // game.id = Math.floor(Math.random() * 100000000);
     io.emit('START_GAME', game);
   })
 
