@@ -71,15 +71,21 @@ io.on('connection', (socket) => {
     io.emit('PUSH_MOVE', data);
   });
 
-  socket.on('ROOM', (room) => {
+  socket.on('ROOM', (data) => {
+    const { room, userId } = data;
     console.log('INCOMING ROOM', room);
     socket.join(room);
-    console.log('user joined room #' + room);
+    socket.emit('RECEIVE_ID', userId);
+    console.log(`USER ${userId} JOINED ROOM #${room}`);
   });
 
   socket.on('SELECT_PIECE', (data) => {
     io.emit('PUSH_SELECT_PIECE', data);
   });
+
+  socket.on('SET_IDS', (ids) => {
+    io.emit('RECEIVE_IDS', ids);
+  })
 
 });
 
