@@ -5,6 +5,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const session = require('express-session');
+const socket = require('socket.io');
 
 const dbConfig = require('./db.config');
 
@@ -46,6 +47,22 @@ require('./passportconfig').configure(passport);
 
 app.use('/api/auth/', require('./routes/auth'));
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`server running on PORT ${PORT}`);
+});
+
+const io = socket(server);
+
+io.on('connection', (socket) => {
+  console.log('SOCKET IS CONNECTED');
+  // here you can start emitting events to the client
+  socket.on('CREATE_GAME', (user) => {
+    console.log('GAME RECEIVED', user);
+    io.emit('RECEIVE_GAME', user);
+  });
+
+  socket.on('JOIN_GAME', (game) => {
+    game.id = Math.floor(Math.random() * 100000000);
+    io.emit('START_GAME', game);
+  })
 });
