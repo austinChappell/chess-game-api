@@ -65,4 +65,26 @@ io.on('connection', (socket) => {
     game.id = Math.floor(Math.random() * 100000000);
     io.emit('START_GAME', game);
   })
+
+  socket.on('MOVE_PIECE', (data) => {
+    console.log('RECEIVED MOVE', data);
+    io.emit('PUSH_MOVE', data);
+  });
+
+  socket.on('ROOM', (room) => {
+    console.log('INCOMING ROOM', room);
+    socket.join(room);
+    console.log('user joined room #' + room);
+  });
+
+  socket.on('SELECT_PIECE', (data) => {
+    io.emit('PUSH_SELECT_PIECE', data);
+  });
+
+});
+
+const gameIo = socket(server, { path: '/game/:id' });
+
+gameIo.on('connection', (socket) => {
+  console.log('SOCKET IS CONNECTED TO GAME');
 });
