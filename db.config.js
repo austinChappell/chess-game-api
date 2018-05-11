@@ -4,15 +4,7 @@ const {
 
 const initializeUsers = () => {
   const client = new Client();
-  const sql = `
-    CREATE TABLE users(
-      id int(11) NOT NULL auto_increment,
-      username varchar(250) NOT NULL,
-      password_hash varchar(250) NOT NULL,
-      PRIMARY KEY ('id'),
-      CONSTRAINT users_username_unique UNIQUE (username)
-    )
-  `;
+  const sql = 'CREATE TABLE users(id int(11) NOT NULL auto_increment, username varchar(250) NOT NULL, password_hash varchar(250) NOT NULL, PRIMARY KEY ("id"), CONSTRAINT users_username_unique UNIQUE (username))';
   client.connect().then(() => {
     return client.query(sql)
   }).then(() => {
