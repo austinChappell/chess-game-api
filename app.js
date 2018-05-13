@@ -68,7 +68,6 @@ io.on('connection', (socket) => {
   })
 
   socket.on('MOVE_PIECE', (data) => {
-    console.log('RECEIVED MOVE', data);
     io.emit('PUSH_MOVE', data);
   });
 
@@ -86,6 +85,14 @@ io.on('connection', (socket) => {
 
   socket.on('SET_IDS', (ids) => {
     io.emit('RECEIVE_IDS', ids);
+  })
+
+  socket.on('EXCHANGE_PIECE', ({ newPiece, pawn }) => {
+    console.log('=================EXCHANGE=================')
+    console.log('new piece', newPiece);
+    console.log('pawn', pawn);
+    console.log('=================EXCHANGE=================')
+    io.emit('EXCHANGE', ({ newPiece, pawn }));
   })
 
 });
