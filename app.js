@@ -12,6 +12,11 @@ const generator = require('./assets/generator');
 const helpers = require('./assets/helpers');
 const moveGenerator = require('./assets/move_generator');
 
+const {
+  mapPiecesToSquares,
+  prepMove,
+} = helpers;
+
 const squares = helpers.generateSquares();
 const { pieces } = generator;
 const players = [
@@ -84,7 +89,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('INIT_GAME', () => {
-    const data = { pieces: JSON.stringify(pieces), squares };
+    const newSquares = mapPiecesToSquares(pieces, squares);
+    console.log('NEW SQUARES', newSquares);
+    const data = { pieces: JSON.stringify(pieces), squares: newSquares };
     io.emit('CREATE_SQUARES', data);
   })
 
@@ -108,14 +115,20 @@ io.on('connection', (socket) => {
       
       selected.allowedMoves = moves;
       
+      // if it was already selected, deselect it
       if (piece.selected) {
         selected.selected = false;
         selected.allowedMoves = [];
       }
+
       io.emit('UPDATE_PIECES', newPieces);
     } else {
       console.log('NOT VALID');
     }
+  });
+
+  socket.on('PREP_MOVE', (data) => {
+    prepMove(Object.assign({}, data, {players, squares}));
   })
 
   socket.on('JOIN_GAME', (game) => {

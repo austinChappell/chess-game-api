@@ -341,23 +341,39 @@ const findCurrentRookMoves = (rook, squares, pieceRow, pieceCol, pieces) => {
 const getSquare = (squares, row, col) =>
   squares.find(sq => sq.row === row && sq.column === col);
 
-class Helpers {
-  constructor() {
-    this.findPieceBySquare = findPieceBySquare;
-    this.findSquareByPiece = findSquareByPiece;
-    this.findCurrentBishopMoves = findCurrentBishopMoves;
-    this.findCurrentKingMoves = findCurrentKingMoves;
-    this.findCurrentKnightMoves = findCurrentKnightMoves;
-    this.findCurrentPawnMoves = findCurrentPawnMoves;
-    this.findCurrentRookMoves = findCurrentRookMoves;
-    this.generateSquares = generateSquares;
-    this.getSquare = getSquare;
-  }
+const listenForCheck = (color, pieces, destinationIndex, squares) => {};
+
+const prepMove = (data) => {
+  const {
+    row,
+    column,
+    followThrough,
+    preSelectedPiece,
+    colorToCheck,
+    players,
+    squares: oldSquares,
+  } = data;
+  console.log('PREP MOVE');
+
+  const activePlayer = players.find(p => p.isTurn);
+  console.log(oldSquares);
+  const squares = oldSquares.map((sq) => {
+    sq.piece = sq.piece ? Object.assign({}, sq.piece) : null;
+    return Object.assign({}, sq);
+  });
+  // const pieces = this.state.pieces.map(p => ({ ...p }));
+  // const square = getSquare(squares, row, column);
+  // const newPieces = pieces.map(p => ({ ...p }));
+
+};
+
+const mapPiecesToSquares = (pieces, squares) => {
+  return squares.map(sq => {
+    const piece = findPieceBySquare(squares, pieces, sq);
+    sq.piece = piece;
+    return sq;
+  })
 }
-
-// console.log('HELPERS', Helpers);
-
-// module.exports = Helpers;
 
 module.exports = {
   findPieceBySquare,
@@ -369,4 +385,7 @@ module.exports = {
   findCurrentRookMoves,
   generateSquares,
   getSquare,
+  listenForCheck,
+  mapPiecesToSquares,
+  prepMove,
 }
