@@ -367,6 +367,7 @@ const prepMove = (data) => {
 
 };
 
+// TODO: start back here
 const mapPiecesToSquares = (pieces, squares) => {
   return squares.map(sq => {
     const piece = findPieceBySquare(squares, pieces, sq);
