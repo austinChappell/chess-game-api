@@ -8,6 +8,28 @@ const session = require('express-session');
 const socket = require('socket.io');
 
 const dbConfig = require('./db.config');
+const generator = require('./assets/generator');
+const helpers = require('./assets/helpers');
+const moveGenerator = require('./assets/move_generator');
+
+const squares = helpers.generateSquares();
+const { pieces } = generator;
+const players = [
+  {
+    castled: false,
+    color: 'black',
+    hasBeenChecked: false,
+    isTurn: false,
+    label: 'Player One',
+  },
+  {
+    castled: false,
+    color: 'white',
+    hasBeenChecked: false,
+    isTurn: true,
+    label: 'Player Two',
+  },
+];
 
 // dbConfig.initializeUsers();
 
@@ -54,18 +76,51 @@ const server = app.listen(PORT, () => {
 const io = socket(server);
 
 io.on('connection', (socket) => {
-  console.log('SOCKET IS CONNECTED');
+
   // here you can start emitting events to the client
   socket.on('CREATE_GAME', (game) => {
-    console.log('GAME RECEIVED', game);
     game.id = Math.floor(Math.random() * 100000000);
     io.emit('RECEIVE_GAME', game);
   });
 
-  socket.on('JOIN_GAME', (game) => {
-    // game.id = Math.floor(Math.random() * 100000000);
-    io.emit('START_GAME', game);
+  socket.on('INIT_GAME', () => {
+    const data = { pieces: JSON.stringify(pieces), squares };
+    io.emit('CREATE_SQUARES', data);
   })
+
+  socket.on('SELECT_PIECE', (data) => {
+    const { piece } = data;
+    const activePlayer = players.find(p => p.isTurn);
+    const isValid = piece.color === activePlayer.color;
+    if (isValid) {
+      const newPieces = pieces.map(p => {
+        const sameCol = p.column === piece.column;
+        const sameRow = p.row === piece.row;
+        const newObj = Object.assign({}, p, {
+          allowedMoves: [],
+          selected: sameCol && sameRow,
+        });
+        return newObj;
+      });
+      const selected = newPieces.find(p => p.selected);
+      const { type } = selected;
+      const moves = moveGenerator[type](selected, squares, selected.row, selected.column, newPieces, activePlayer);
+      
+      selected.allowedMoves = moves;
+      
+      if (piece.selected) {
+        selected.selected = false;
+        selected.allowedMoves = [];
+      }
+      io.emit('UPDATE_PIECES', newPieces);
+    } else {
+      console.log('NOT VALID');
+    }
+  })
+
+  socket.on('JOIN_GAME', (game) => {
+    io.emit('START_GAME', game);
+  });
 
   socket.on('MOVE_PIECE', (data) => {
     io.emit('PUSH_MOVE', data);
@@ -73,10 +128,8 @@ io.on('connection', (socket) => {
 
   socket.on('ROOM', (data) => {
     const { room, userId } = data;
-    console.log('INCOMING ROOM', room);
     socket.join(room);
     socket.emit('RECEIVE_ID', userId);
-    console.log(`USER ${userId} JOINED ROOM #${room}`);
   });
 
   socket.on('SELECT_PIECE', (data) => {
@@ -85,15 +138,11 @@ io.on('connection', (socket) => {
 
   socket.on('SET_IDS', (ids) => {
     io.emit('RECEIVE_IDS', ids);
-  })
+  });
 
   socket.on('EXCHANGE_PIECE', ({ newPiece, pawn }) => {
-    console.log('=================EXCHANGE=================')
-    console.log('new piece', newPiece);
-    console.log('pawn', pawn);
-    console.log('=================EXCHANGE=================')
     io.emit('EXCHANGE', ({ newPiece, pawn }));
-  })
+  });
 
 });
 
